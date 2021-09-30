@@ -1,0 +1,44 @@
+[tool.poetry]
+name = "shape_classifier"
+version = "0.1.0"
+description = ""
+license = "MIT"
+authors = ["Mazen Alotaibi <alotaima@oregonstate.edu>"]
+readme = 'README.md'
+repository = "https://github.com/sudomaze/shape_classifier"
+homepage = "https://github.com/sudomaze/shape_classifier"
+keywords = ['pytorch', 'pytorch-lightning']
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/sudomaze/shape_classifier/issues"
+"Changelog" = "https://github.com/sudomaze/shape_classifier/blob/master/CHANGELOG.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+PyYAML = "^5.4.1"
+fire = "^0.4.0"
+tensorboard = "^2.6.0"
+jupyter = "^1.0.0"
+albumentations = "^1.0.0"
+pandas = "^1.3.3"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+pylint = "^2.10.2"
+autopep8 = "^1.5.7"
+visdom = "^0.1.8"
+jsonpatch = "^1.32"
+rich = "^10.9.0"
+wandb = "^0.12.1"
+poethepoet = "^0.10.0"
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+line-length = 120 # override the default of 88
+
+[tool.poe.tasks]
+train = "python scripts/train.py"
+test = "python scripts/test.py"
+pytest = "pytest tests"
