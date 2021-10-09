@@ -68,22 +68,26 @@ def train(config_path: str = "./config/experiments.yml", job: str = "main"):
         num_workers
     )
     dataset.setup()
+    # print(len(dataset.train_dataloader().dataset))
+    # print(len(dataset.train_dataloader()))
+    # print(len(dataset.val_dataloader().dataset))
+    # print(len(dataset.val_dataloader()))
     val_samples = next(iter(dataset.val_dataloader()))
     val_imgs, val_labels = val_samples[0], val_samples[1]
-    val_imgs.shape, val_labels.shape
     # model
+    print(dataset.num_classes)
     litmodel = LitModel(
         dataset.size(), 
         dataset.num_classes, 
         len(dataset.train_dataloader()), 
         learning_rate
     )
-    wandb_logger.watch(litmodel)
+    # wandb_logger.watch(litmodel)
     _loggers = [tb_logger, wandb_logger]
     _callbacks = [
         ModelCheckpoint(dirpath=output_dir), 
-        utils.ImagePredictionLogger(val_samples),
-        LearningRateMonitor(logging_interval='step')
+        utils.ImagePredictionLogger(val_samples,dataset.val_dataset.classes),
+        # LearningRateMonitor(logging_interval='step')
     ]
     # trainer
     trainer = pl.Trainer(

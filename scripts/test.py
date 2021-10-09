@@ -16,7 +16,7 @@ from pytorch_lightning import loggers
 
 from shape_classifier.pl import LitDataset, LitModel
 
-def test(config_path: str = "./config/experiments.yml", job: str = "main",checkpoint_path:str = "outputs/checkpoints/E41JR_main_256_0.001_10/epoch=9-step=1759.ckpt"):
+def test(config_path: str = "./config/experiments.yml", job: str = "main",checkpoint_path:str = "outputs/checkpoints/G6KHJ_main_256_0.001_10/epoch=9-step=179.ckpt"):
     # seed
     pl.seed_everything(1)
     np.random.seed(1)
@@ -50,27 +50,27 @@ def test(config_path: str = "./config/experiments.yml", job: str = "main",checkp
     logger = f"{output_path}/logs/{experiment}"
 
     # loggers
-    wandb.login()
-    tb_logger = loggers.TensorBoardLogger(save_dir=logger)
-    wandb_logger = loggers.WandbLogger(
-        project=project, log_model="all", name=experiment)
+    # wandb.login()
+    # tb_logger = loggers.TensorBoardLogger(save_dir=logger)
+    # wandb_logger = loggers.WandbLogger(
+        # project=project, log_model="all", name=experiment)
     # data
     dataset = LitDataset(data_path, batch_size, num_workers)
-    dataset.prepare_data()
+    # dataset.prepare_data()
     dataset.setup()
-    val_samples = next(iter(dataset.val_dataloader()))
-    val_imgs, val_labels = val_samples[0], val_samples[1]
-    val_imgs.shape, val_labels.shape
+    # val_samples = next(iter(dataset.val_dataloader()))
+    # val_imgs, val_labels = val_samples[0], val_samples[1]
+    # val_imgs.shape, val_labels.shape
     # model
     litmodel = LitModel.load_from_checkpoint(
         checkpoint_path=checkpoint_path,
         map_location=None,
     )
-    wandb_logger.watch(litmodel)
-    _loggers = [tb_logger, wandb_logger]
+    # wandb_logger.watch(litmodel)
+    # _loggers = [tb_logger, wandb_logger]
     # trainer
     trainer = pl.Trainer(
-        logger=_loggers,
+        # logger=_loggers,
         gpus=gpus,
         max_epochs=max_epoch,
         progress_bar_refresh_rate=20

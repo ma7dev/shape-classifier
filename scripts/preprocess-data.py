@@ -29,6 +29,28 @@ if not os.path.exists(f'{output_path}/test'):
     os.makedirs(f'{output_path}/test')
 if not os.path.exists(f'{output_path}/test/imgs'):
     os.makedirs(f'{output_path}/test/imgs')
+classes_ = {
+    0: {'name': 'cube', 'num': 0}, 
+    1: {'name': 'cone', 'num': 1},
+    2: {'name': 'circle frustum', 'num': 2},
+    3: {'name': 'cylinder', 'num': 3},
+    4: {'name': 'pyramid', 'num': 4},
+    5: {'name': 'square frustum', 'num': 5},
+    6: {'name': 'letter l', 'num': 6},
+    7: {'name': 'skipped_1', 'num': -1}, # remove
+    8: {'name': 'triangular prism', 'num': 7},
+    9: {'name': 'car', 'num': 8},
+    10: {'name': 'duck', 'num': 9},
+    11: {'name': 'skipped_2', 'num': -1}, # remove
+    12: {'name': 'sphere', 'num': 10},
+    13: {'name': 'train', 'num': 11},
+    14: {'name': 'trolley', 'num': 12},
+    15: {'name': 'tube narrow', 'num': 13},
+    16: {'name': 'tube wide', 'num': 14},
+    17: {'name': 'turtle', 'num': 15},
+    18: {'name': 'occluder_pole', 'num': 16}, # rename
+    19: {'name': 'occluder_wall', 'num': -1}, # remove
+}
 missing = []
 # print('\ntrain')
 # filename = f"{output_path}/train/gt.txt"
@@ -45,11 +67,14 @@ missing = []
 #             objs = df[df['frame_num'] == img_num].values.tolist()
 #             for i, obj in enumerate(objs):
 #                 # print(obj[0],obj[2],obj[4],obj[5],obj[6],obj[7])
-#                 class_num = int(float(obj[2]))
-#                 left = int(float(obj[4])) - padding
-#                 top = int(float(obj[5])) - padding
-#                 right = int(float(obj[4])) + int(float(obj[6])) + padding
-#                 bottom = int(float(obj[5])) + int(float(obj[7])) + padding
+#                 class_num = classes_[int(float(obj[2]))]['num']
+#                 if class_num == -1:
+#                     continue
+#                 img_width, img_height = im.size
+#                 left = max(0.0, int(float(obj[4])) - padding)
+#                 top = max(0.0, int(float(obj[5])) - padding)
+#                 right = min(img_width, int(float(obj[4])) + int(float(obj[6])) + padding)
+#                 bottom = min(img_height, int(float(obj[5])) + int(float(obj[7])) + padding)
 #                 vis = float(obj[3])
 #                 im1 = im.crop((left, top, right, bottom))
 #                 example_num = f'{train_seq}_{img_num}_{i}'
@@ -70,11 +95,14 @@ with open(filename, 'w') as csvfile:
             objs = df[df['frame_num'] == img_num].values.tolist()
             for i, obj in enumerate(objs):
                 # print(obj[0],obj[2],obj[4],obj[5],obj[6],obj[7])
-                class_num = int(float(obj[2]))
-                left = int(float(obj[4])) - padding
-                top = int(float(obj[5])) - padding
-                right = int(float(obj[4])) + int(float(obj[6])) + padding
-                bottom = int(float(obj[5])) + int(float(obj[7])) + padding
+                class_num = classes_[int(float(obj[2]))]['num']
+                if class_num == -1:
+                    continue
+                img_width, img_height = im.size
+                left = max(0.0, int(float(obj[4])) - padding)
+                top = max(0.0, int(float(obj[5])) - padding)
+                right = min(img_width, int(float(obj[4])) + int(float(obj[6])) + padding)
+                bottom = min(img_height, int(float(obj[5])) + int(float(obj[7])) + padding)
                 vis = float(obj[3])
                 im1 = im.crop((left, top, right, bottom))
                 example_num = f'{val_seq}_{img_num}_{i}'
