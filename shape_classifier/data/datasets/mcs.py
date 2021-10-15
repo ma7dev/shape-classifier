@@ -28,62 +28,120 @@ class MCS(Dataset):
         self, root: str, 
         transforms = None, 
         vis_threshold: float = 0.25,
-        batch_size: int = 6,
-        sample_size: int = 269,
+        batch_size: int = 6
     ):
         self.root = root
         self.transforms = transforms
         self._vis_threshold = vis_threshold
-        self._classes = [
-            'cube',
-            'cone',
-            'circle frustum',
-            'cylinder',
-            'pyramid',
-            'square frustum',
-            'letter l',
-            'skipped_1',
-            'triangular prism',
-            'car',
-            'duck',
-            'skipped_2',
-            'sphere',
-            'train',
-            'trolley',
-            'tube narrow',
-            'tube wide',
-            'turtle',
-            'occluder_pole',
-            'occluder_wall',
+        # self.classes = [
+        #     'cube',
+        #     'cone',
+        #     'circle frustum',
+        #     'cylinder',
+        #     'pyramid',
+        #     'square frustum',
+        #     'letter l',
+        #     'triangular prism',
+        #     'car',
+        #     'duck',
+        #     'sphere',
+        #     'train',
+        #     'trolley',
+        #     'tube narrow',
+        #     'tube wide',
+        #     'turtle',
+        #     'pole',
+        # ]
+        self.classes = [
+            "cube",
+            "pole",
+            "else"
         ]
         self._img_paths = []
         self._batch_size = batch_size
         set_names = ['img_id', 'vis', 'class_num']
         df = pd.read_csv(f"{root}/gt.txt", usecols=range(0,len(set_names)), names=set_names, header=None)
-        self.set = (
+        # if "test" in root:
+        #     print(root)
+        #     self.set = ( 
+        #         df
+        #         [df['img_id'].str.contains("COL_0051_02", case=False)]
+        #         [df['vis'] >= vis_threshold] # filter
+        #         .reset_index() # reset indices
+        #         # .sample(frac=1) # randomness
+        #     )
+        # else:
+        self.set = ( 
             df
-            [df['vis'] > vis_threshold]
-            .groupby('class_num')
-            .apply(lambda x: x.sample(n=sample_size))
-            .reset_index(drop = True)
-            .to_dict()
+            .copy()
+            [df['vis'] >= vis_threshold] # filter
+            .reset_index() # reset indices
+            .sample(frac=1) # randomness
         )
-        
-        
+        # self.groups = (
+        #     self.set
+        #     .copy()
+        #     .groupby(['class_num']) # grouping
+        #     .groups
+        # )
+        self.before_groups = (
+            self.set
+            .copy()
+            .groupby(['class_num']) # grouping
+            .groups
+        )
+        self.groups = {
+            0: [],
+            1: [],
+            2: []
+        }
+        self.mapping = [0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0]
+        for i, group in self.before_groups.items():
+            if i == 0:
+                self.groups[0].extend(group)
+            elif i > 0 and i < 16:
+                self.groups[2].extend(group)
+            elif i == 17:
+                self.groups[2].extend(group)
+            elif i == 16:
+                self.groups[1].extend(group)
+        # if "train" in root:
+        #     print(root)
+        #     self.lowest = self._get_lowest(self.groups)
+        #     self.len = math.floor((len(self.groups.keys())*self.lowest))
+        # else:
+        #     self.len = len(self.set)
+        self.len = len(self.set)
 
+    def _get_lowest(self, groups):
+        min_ = math.inf
+        for i in groups.keys():
+            if min_ > len(groups[i]):
+                min_ = len(groups[i])
+        return min_
     def __str__(self) -> str:
         return f"{self.root}"
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        img_path = f"{self.root}/imgs/{self.set['img_id'][idx]}.jpg"
+        # print(len(self.set), idx)
+        img_path = f"{self.root}/imgs/{self.set['img_id'].iloc[idx]}.jpg"
         img = Image.open(img_path).convert("RGB")
-        target = self.set['class_num'][idx]
+        target = self.mapping[self.set['class_num'].iloc[idx]]
         if self.transforms is not None:
             img = self.transforms(img)
         return img, target
+    
+    # def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    #     # print(len(self.set), idx)
+    #     img_path = f"{self.root}/imgs/{self.set['img_id'].iloc[idx]}.jpg"
+    #     img = Image.open(img_path).convert("RGB")
+    #     target = self.set['class_num'].iloc[idx]
+    #     if self.transforms is not None:
+    #         img = self.transforms(img)
+    #     return img, target
 
     def __len__(self) -> int:
-        return len(self.set['img_id'])
+        return self.len
 
     @property
     def num_classes(self) -> int:
@@ -92,4 +150,4 @@ class MCS(Dataset):
         Returns:
             int: [description]
         """
-        return len(self._classes)
+        return len(self.classes)

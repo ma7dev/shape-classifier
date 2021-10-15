@@ -5,42 +5,26 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import Callback
 
 class ImagePredictionLogger(Callback):
-    def __init__(self, val_samples, num_samples=32):
+    def __init__(self, val_samples, classes, num_samples=32):
         super().__init__()
         self.num_samples = num_samples
         self.val_imgs, self.val_labels = val_samples
-        self._classes = [
-            'cube',
-            'cone',
-            'circle frustum',
-            'cylinder',
-            'pyramid',
-            'square frustum',
-            'letter l',
-            'skipped_1',
-            'triangular prism',
-            'car',
-            'duck',
-            'skipped_2',
-            'sphere',
-            'train',
-            'trolley',
-            'tube narrow',
-            'tube wide',
-            'turtle',
-            'occluder_pole',
-            'occluder_wall',
-        ]
+        self.num_classes = len(classes)
+        self.classes = classes
     def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule):
         val_imgs = self.val_imgs.to(device=pl_module.device)
 
         logits = pl_module(val_imgs)
         preds = torch.argmax(logits, dim=1)
         trainer.logger[1].experiment.log({
-            "examples": [wandb.Image(x, caption=f"Pred:{pred}, Label:{y}") 
-                            for x, pred, y in zip(val_imgs, preds, self.val_labels)],
+            "examples": [
+                wandb.Image(
+                    x, 
+                    caption=f"Pred:{self.classes[pred] if pred < self.num_classes else 'other'}, Label:{self.classes[y] if y < self.num_classes else 'other'}") 
+                for x, pred, y in zip(val_imgs, preds, self.val_labels)
+            ],
             "global_step": trainer.global_step
-            })
+        })
 
 def collate_fn(batch: List[torch.Tensor]) -> Tuple[Tuple[torch.Tensor]]:
     """[summary]

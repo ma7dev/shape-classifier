@@ -1,10 +1,24 @@
-DATA_PATH: "/scratch/alotaima/datasets/v6-shape"
+DATA_PATH: "/scratch/alotaima/datasets/v6-shape-wall"
 OUTPUT_PATH: "./outputs"
 PROJECT: "SHAPE_CLASSIFIER"
 
 main:
   BATCH_SIZE: 256
   LEARNING_RATE: 1e-3
-  MAX_EPOCH: 10
-  NUM_WORKERS: 10
+  MAX_EPOCH: 30
+  NUM_WORKERS: 1
+  GPUS: 1
+
+new_aug:
+  BATCH_SIZE: 256
+  LEARNING_RATE: 1e-3
+  MAX_EPOCH: 30
+  NUM_WORKERS: 1
+  GPUS: 1
+
+wall_as_own_class:
+  BATCH_SIZE: 256
+  LEARNING_RATE: 1e-3
+  MAX_EPOCH: 30
+  NUM_WORKERS: 1
   GPUS: 1

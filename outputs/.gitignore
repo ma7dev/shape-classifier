@@ -1,0 +1,5 @@
+*
+!.gitignore
+!checkpoints
+!logs
+!figures

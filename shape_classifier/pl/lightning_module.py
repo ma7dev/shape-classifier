@@ -15,24 +15,21 @@ import pytorch_lightning as pl
 import torchmetrics
 import torch.nn.functional as F
 from shape_classifier.models.simple_classifier import Model
+from shape_classifier.loss import FocalLoss
 class LitModel(pl.LightningModule):
     def __init__(self, input_shape, num_classes, data_len, learning_rate,chkpt_path=""):
         super().__init__()
         self.save_hyperparameters()
         self.model = Model(num_classes)
         self.learning_rate = learning_rate
-        self.criterion = nn.CrossEntropyLoss()
+        # self.criterion = nn.CrossEntropyLoss()
+        self.criterion = FocalLoss()
         self.metric = torchmetrics.Accuracy()
         self.data_len = data_len
+        self.current_step = 1
     def configure_optimizers(self):
-        # optimizer = torch.optim.Adam(
-        #     [{
-        #         'params': [p for p in self.parameters()],
-        #         'name': 'my_parameter_group_name'
-        #     }],
-        #     lr=self.learning_rate
-        # )
-        optimizer = torch.optim.SGD(self.model.parameters(),lr=0.01,momentum=0.5)
+        optimizer = torch.optim.Adam(self.model.parameters())
+        # optimizer = torch.optim.SGD(self.model.parameters(),lr=0.01,momentum=0.5)
         # warmup_factor = 1.0 / 1000
         # warmup_iters = min(1000, self.data_len - 1)
         # def fun(iter_num: int) -> float:
@@ -53,6 +50,8 @@ class LitModel(pl.LightningModule):
     def _step(self, batch, stage=None):
         x, y = batch
         logits = self.model(x)
+        # print(logits)
+        # print(y)
         loss = self.criterion(logits, y)
         preds = torch.argmax(logits, dim=1)
         acc = self.metric(preds, y)
@@ -85,6 +84,7 @@ class LitModel(pl.LightningModule):
     #   on_train_epoch_end()
     # on_train_end
     def training_step(self, batch, batch_idx):
+        self.current_step += 1
         return self._step(batch, "train")
 
     def validation_step(self, batch, batch_idx):

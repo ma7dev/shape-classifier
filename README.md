@@ -23,15 +23,15 @@ wandb login
 
 - Train model
 ```bash
-poetry run train
+poe train
 ```
 - Test model
 ```bash
-poetry run test
+poe test
 ```
 - Run pytest
 ```bash
-poetry run pytest tests/
+poe pytest tests/
 ```
 
 ## Instructions

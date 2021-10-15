@@ -9,24 +9,35 @@ import pytorch_lightning as pl
 from torchvision import transforms
 from torch.utils.data import random_split, DataLoader
 from shape_classifier.data.datasets.mcs import MCS
+from shape_classifier.data.samplers.simple_sampler import BatchSampler
+
+class AddGaussianNoise(object):
+    def __init__(self, mean=0., std=1.):
+        self.std = std
+        self.mean = mean
+        
+    def __call__(self, tensor):
+        return tensor + torch.randn(tensor.size()) * self.std + self.mean
+    
+    def __repr__(self):
+        return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
 
 def get_transform(train: bool):
     # if train:
     #     transforms.append(RandomHorizontalFlip(0.5))
     if train:
         return transforms.Compose([
-            transforms.RandomRotation(10),      # rotate +/- 10 degrees
-            transforms.RandomHorizontalFlip(),  # reverse 50% of images
-            transforms.Resize(224),             # resize shortest side to 224 pixels
-            transforms.CenterCrop(224),         # crop longest side to 224 pixels at center
+            transforms.RandomHorizontalFlip(), 
+            transforms.Resize((224,224)),             
             transforms.ToTensor(),
+            transforms.RandomApply([transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.2)], p=0.5),
+            transforms.RandomApply([AddGaussianNoise(0., 0.1)], p=0.25),  
             transforms.Normalize([0.485, 0.456, 0.406],
-                                [0.229, 0.224, 0.225])
+                                [0.229, 0.224, 0.225]),
         ])
-    return transforms.Compose([
-        transforms.Resize(224),
-        transforms.CenterCrop(224),
+    return transforms.Compose([      
         transforms.ToTensor(),
+        transforms.Resize((224,224)),     
         transforms.Normalize([0.485,0.456,0.406],
                             [0.229,0.224,0.225])
     ])
@@ -53,6 +64,7 @@ class LitDataset(pl.LightningDataModule):
         self.num_workers = num_workers
         self.num_classes = -1 
         self.train_dataset = self.val_dataset = None
+        self.train_sampler = None
 
     def setup(self, stage: Optional[str] = None):
         if stage == "fit" or stage is None:
@@ -60,39 +72,48 @@ class LitDataset(pl.LightningDataModule):
                                 f"{self.data_path}/train",
                                 get_transform(train=False),
                                 batch_size=self.batch_size,
-                                # test=True
                             )
             self.num_classes = self.train_dataset.num_classes
             self.val_dataset = MCS(
-                                    f"{self.data_path}/train",
+                                    f"{self.data_path}/test",
                                     get_transform(train=False),
                                     batch_size=self.batch_size,
-                                    # test=True
                                 )
-
+            # self.train_sampler = BatchSampler(
+            #     self.train_dataset,
+            #     batch_size=self.batch_size,
+            # )
+            # self._train_dataloader = DataLoader(
+            #     self.train_dataset, 
+            #     batch_sampler=self.train_sampler,
+            #     num_workers=self.num_workers,
+            # )
+            self._train_dataloader = DataLoader(
+                self.train_dataset, 
+                batch_size=self.batch_size, 
+                num_workers=self.num_workers
+            )
+            self._val_dataloader = DataLoader(
+                self.val_dataset, 
+                batch_size=self.batch_size, 
+                num_workers=self.num_workers
+            )
         # if stage == "test" or stage is None:
-        #     self.dataset_test = CIFAR10(
-        #         self.data_dir, train=False, transform=self.transform)
+        #     self.test_dataset = MCS(
+        #                             f"{self.data_path}/test",
+        #                             get_transform(train=False),
+        #                             batch_size=self.batch_size,
+        #                         )
 
     def train_dataloader(self):
-        return DataLoader(
-            self.train_dataset, 
-            batch_size=self.batch_size, 
-            num_workers=self.num_workers,
-            shuffle=True
-        )
+        return self._train_dataloader
 
     def val_dataloader(self):
-        return DataLoader(
-            self.val_dataset, 
-            batch_size=self.batch_size, 
-            num_workers=self.num_workers,
-            shuffle=True
-        )
+        return self._val_dataloader
 
     # def test_dataloader(self):
     #     return DataLoader(
-    #         self.dataset_test, 
+    #         self.test_dataset, 
     #         batch_size=self.batch_size, 
     #         num_workers=self.num_workers
     #     )

@@ -155,8 +155,10 @@ batch_size = 256
 # best_file_path = '/nfs/hpc/share/alotaima/mcs/shape-classifier/outputs/checkpoints/7NV5M_main_256_0.001_10/epoch=9-step=189.ckpt'
 # best_file_path = "/nfs/hpc/share/alotaima/mcs/shape-classifier/outputs/checkpoints/5M5NI_random_sampler_256_0.001_10/epoch=6-step=3485.ckpt"
 # best_file_path = '/nfs/hpc/share/alotaima/mcs/shape-classifier/outputs/checkpoints/LS1AK_main_256_0.001_10/epoch=9-step=4979.ckpt'
-# best_file_path = '/nfs/hpc/share/alotaima/mcs/shape-classifier/outputs/checkpoints/GYKCP_main_256_0.001_10/epoch=9-step=4979.ckpt'
-best_file_path = '/nfs/hpc/share/alotaima/mcs/shape-classifier/outputs/checkpoints/UNLMT_main_256_0.001_10/epoch=9-step=4979.ckpt'
+# best 3
+best_file_path = '/nfs/hpc/share/alotaima/mcs/shape-classifier/outputs/checkpoints/GYKCP_main_256_0.001_10/epoch=9-step=4979.ckpt'
+# best 17
+# best_file_path = '/nfs/hpc/share/alotaima/mcs/shape-classifier/outputs/checkpoints/UNLMT_main_256_0.001_10/epoch=9-step=4979.ckpt'
 model = LitModel.load_from_checkpoint(checkpoint_path=best_file_path)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(model)
